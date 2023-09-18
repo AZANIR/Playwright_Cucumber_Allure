@@ -12,7 +12,7 @@ jobs:
   run:
     strategy: 
       matrix:
-        node: [ '14', '16', '18' ]
+        node: ['16', '18' ]
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +24,7 @@ jobs:
       uses: runforesight/foresight-workflow-kit-action@v1
       if: ${{ always() }}
       with:
-        api_key: ${{secrets.FORESIGHT_TOKEN}}
+        api_key: ${{secrets.ACCES_TOKEN}}
     - name: npm ci
       run: npm ci
     - name: run lint
@@ -37,7 +37,7 @@ jobs:
       uses: runforesight/foresight-test-kit-action@v1
       if: ${{ always() }}
       with:
-        api_key: ${{secrets.FORESIGHT_TOKEN}}      
+        api_key: ${{secrets.ACCES_TOKEN}}      
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v3
@@ -55,5 +55,5 @@ jobs:
         run: gh pr merge --auto --merge "$PR_URL" # Use Github CLI to merge automatically the PR
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.ACCES_TOKEN}}
           
