@@ -1,0 +1,59 @@
+name: Test 
+
+env:
+  CI: true
+  DEBUG: pw:api  
+
+on:
+  push:
+
+jobs:
+
+  run:
+    strategy: 
+      matrix:
+        node: [ '14', '16', '18' ]
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node }}
+    - name: Collect Workflow Telemetry
+      uses: runforesight/foresight-workflow-kit-action@v1
+      if: ${{ always() }}
+      with:
+        api_key: ${{secrets.FORESIGHT_TOKEN}}
+    - name: npm ci
+      run: npm ci
+    - name: run lint
+      run: npm run lint
+    - name: install Playwright
+      run: npx playwright install --with-deps > /dev/null
+    - name: run features
+      run: npm run test
+    - name: Analyze Test and/or Coverage Results
+      uses: runforesight/foresight-test-kit-action@v1
+      if: ${{ always() }}
+      with:
+        api_key: ${{secrets.FORESIGHT_TOKEN}}      
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-result-report
+        path: reports/report.html
+
+  dependabot:
+    name: 'Dependabot'
+    needs: [run] 
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'}} # Detect that the PR author is dependabot
+    steps:
+      - name: Enable auto-merge for Dependabot PRs
+        run: gh pr merge --auto --merge "$PR_URL" # Use Github CLI to merge automatically the PR
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          
